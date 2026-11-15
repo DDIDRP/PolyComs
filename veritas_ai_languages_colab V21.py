@@ -1426,8 +1426,10 @@ EMBEDDED_HTML = r"""<!DOCTYPE html>
 
     <div class="card">
       <div class="row" style="justify-content:space-between; margin-bottom:10px;">
-        <div class="row" style="flex:1;">
-          <select id="src-lang" aria-label="Source language" style="max-width:215px;" onchange="renderKeyboard()">
+        <div class="row" style="flex:1; align-items:flex-end;">
+          <div style="min-width:190px; max-width:230px; flex:1;">
+            <label for="src-lang" style="display:block; font-size:0.8em; font-weight:700; color:var(--text-muted); margin-bottom:4px;" data-i18n="lbl_from">From (Input)</label>
+            <select id="src-lang" aria-label="From (Input language)" onchange="renderKeyboard()">
             <option value="auto">✨ Auto-Detect (Tatoeba)</option>
             <option value="eng_Latn">English</option>
             <option value="fra_Latn">French / Français</option>
@@ -1453,9 +1455,12 @@ EMBEDDED_HTML = r"""<!DOCTYPE html>
             <option value="smo_Latn">Samoan / Gagana Sāmoa</option>
             <option value="arb_Arab">Arabic / العربية</option>
             <option value="hin_Deva">Hindi / हिन्दी</option>
-          </select>
-          <span style="font-weight:800;" aria-hidden="true">→</span>
-          <select id="tgt-lang" aria-label="Target language" style="max-width:215px;">
+            </select>
+          </div>
+          <span style="font-weight:800; font-size:1.3em; padding:0 4px 8px;" aria-hidden="true">→</span>
+          <div style="min-width:190px; max-width:230px; flex:1;">
+            <label for="tgt-lang" style="display:block; font-size:0.8em; font-weight:700; color:var(--text-muted); margin-bottom:4px;" data-i18n="lbl_to">To (Output)</label>
+            <select id="tgt-lang" aria-label="To (Output language)">
             <option value="eng_Latn">English</option>
             <option value="fra_Latn">French / Français</option>
             <option value="spa_Latn">Spanish / Español</option>
@@ -1480,7 +1485,8 @@ EMBEDDED_HTML = r"""<!DOCTYPE html>
             <option value="smo_Latn">Samoan / Gagana Sāmoa</option>
             <option value="arb_Arab">Arabic / العربية</option>
             <option value="hin_Deva">Hindi / हिन्दी</option>
-          </select>
+            </select>
+          </div>
         </div>
 
         <div class="row">
@@ -1804,11 +1810,11 @@ let activeAudio = null;
 let stopSeq = false;
 
 const UI_I18N = {
-  en: { nav_translate: "Translate & Explain", nav_lid: "Language ID", nav_quality: "Quality (chrF)", nav_safety: "Safety Check", nav_a11y: "Accessibility", btn_speak: "Speak", btn_translate: "Translate", lbl_before: "Before (Input / Editable Captions)", lbl_after: "After (NLLB-200 Output)", hdr_honesty: "Honesty & Alternatives", hdr_explain: "Model Explanation, Easy-Read & Key Info" },
-  es: { nav_translate: "Traducir y Explicar", nav_lid: "Identificar Idioma", nav_quality: "Calidad (chrF)", nav_safety: "Seguridad", nav_a11y: "Accesibilidad", btn_speak: "Hablar", btn_translate: "Traducir", lbl_before: "Antes (Entrada)", lbl_after: "Después (NLLB-200)", hdr_honesty: "Honestidad y Opciones", hdr_explain: "Explicación y Lectura Fácil" },
-  fr: { nav_translate: "Traduire & Expliquer", nav_lid: "Identification", nav_quality: "Qualité (chrF)", nav_safety: "Sécurité", nav_a11y: "Accessibilité", btn_speak: "Parler", btn_translate: "Traduire", lbl_before: "Avant (Entrée)", lbl_after: "Après (NLLB-200)", hdr_honesty: "Fiabilité & Options", hdr_explain: "Explication & Facile à Lire" },
-  sw: { nav_translate: "Tafsiri & Eleza", nav_lid: "Tambua Lugha", nav_quality: "Ubora (chrF)", nav_safety: "Usalama", nav_a11y: "Ufikivu", btn_speak: "Sema", btn_translate: "Tafsiri", lbl_before: "Kabla (Ingizo)", lbl_after: "Baada (NLLB-200)", hdr_honesty: "Uaminifu & Chaguo", hdr_explain: "Maelezo & Lugha Rahisi" },
-  ja: { nav_translate: "翻訳と解説", nav_lid: "言語判定", nav_quality: "品質 (chrF)", nav_safety: "安全性チェック", nav_a11y: "アクセシビリティ", btn_speak: "音声入力", btn_translate: "翻訳する", lbl_before: "翻訳前（編集可能）", lbl_after: "翻訳後 (NLLB-200)", hdr_honesty: "信頼度と代替案", hdr_explain: "モデルの解説・やさしい表現" },
+  en: { nav_translate: "Translate & Explain", nav_lid: "Language ID", nav_quality: "Quality (chrF)", nav_safety: "Safety Check", nav_a11y: "Accessibility", btn_speak: "Speak", btn_translate: "Translate", lbl_from: "From (Input)", lbl_to: "To (Output)", lbl_before: "Before (Input / Editable Captions)", lbl_after: "After (NLLB-200 Output)", hdr_honesty: "Honesty & Alternatives", hdr_explain: "Model Explanation, Easy-Read & Key Info" },
+  es: { nav_translate: "Traducir y Explicar", nav_lid: "Identificar Idioma", nav_quality: "Calidad (chrF)", nav_safety: "Seguridad", nav_a11y: "Accesibilidad", btn_speak: "Hablar", btn_translate: "Traducir", lbl_from: "De (Entrada)", lbl_to: "A (Salida)", lbl_before: "Antes (Entrada)", lbl_after: "Después (NLLB-200)", hdr_honesty: "Honestidad y Opciones", hdr_explain: "Explicación y Lectura Fácil" },
+  fr: { nav_translate: "Traduire & Expliquer", nav_lid: "Identification", nav_quality: "Qualité (chrF)", nav_safety: "Sécurité", nav_a11y: "Accessibilité", btn_speak: "Parler", btn_translate: "Traduire", lbl_from: "De (Entrée)", lbl_to: "Vers (Sortie)", lbl_before: "Avant (Entrée)", lbl_after: "Après (NLLB-200)", hdr_honesty: "Fiabilité & Options", hdr_explain: "Explication & Facile à Lire" },
+  sw: { nav_translate: "Tafsiri & Eleza", nav_lid: "Tambua Lugha", nav_quality: "Ubora (chrF)", nav_safety: "Usalama", nav_a11y: "Ufikivu", btn_speak: "Sema", btn_translate: "Tafsiri", lbl_from: "Kutoka (Ingizo)", lbl_to: "Kwenda (Toleo)", lbl_before: "Kabla (Ingizo)", lbl_after: "Baada (NLLB-200)", hdr_honesty: "Uaminifu & Chaguo", hdr_explain: "Maelezo & Lugha Rahisi" },
+  ja: { nav_translate: "翻訳と解説", nav_lid: "言語判定", nav_quality: "品質 (chrF)", nav_safety: "安全性チェック", nav_a11y: "アクセシビリティ", btn_speak: "音声入力", btn_translate: "翻訳する", lbl_from: "元の言語 (入力)", lbl_to: "翻訳先の言語 (出力)", lbl_before: "翻訳前（編集可能）", lbl_after: "翻訳後 (NLLB-200)", hdr_honesty: "信頼度と代替案", hdr_explain: "モデルの解説・やさしい表現" },
 };
 
 function setUiLang(lang) {
