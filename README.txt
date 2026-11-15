@@ -1,6 +1,9 @@
 # PolyComs
 **Track:** 4.4 AI + Languages
-**Team:** [Your Name]
+**Team:** N/A, just me!
+
+THIS IS A PROTOTYPE LANGUAGE TRANSLATOR PLATFORM DEVELOPED FOR A HACKATHON, AND AS SUCH OFTEN EXHIBITS ERRORS. WHILST THE MAJORITY OF THESE ARE HARMLESS, PLEASE DO NOT RELY ON THIS FOR FORMAL COMMUNICATIONS, FINANCIAL, LEGAL, HEALTH, OR DRIVING ADVICE. THANK YOU!
+
 
 ## The problem
 Many translation tools are built around English and widely spoken European languages, leaving speakers of less-served languages—and users with visual, cognitive, or hearing barriers—behind. They also present uncertain machine outputs as fact without showing confidence, alternatives, or safety warnings.
