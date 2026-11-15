@@ -47,6 +47,8 @@ REQUIRED_PACKAGES = [
     "edge-tts",
     "gTTS",
     "scipy",
+    "easyocr",
+    "pillow",
 ]
 
 def ensure_dependencies():
@@ -55,6 +57,7 @@ def ensure_dependencies():
         "python-multipart": "multipart",
         "scikit-learn": "sklearn",
         "openai-whisper": "whisper",
+        "pillow": "PIL",
     }
     for pkg in REQUIRED_PACKAGES:
         mod = import_map.get(pkg, pkg.replace("-", "_"))
@@ -102,6 +105,8 @@ from sklearn.metrics import accuracy_score, confusion_matrix
 from langdetect import detect, detect_langs, LangDetectException
 import sacrebleu
 import whisper
+import easyocr  # type: ignore[import-not-found]
+from PIL import Image
 from jiwer import wer as compute_wer
 
 # ==============================================================================
@@ -1025,6 +1030,66 @@ GTTS_LANGS = {
     "arb_Arab": "ar", "hin_Deva": "hi",
 }
 
+
+_ocr_readers = {}
+_ocr_lock = threading.Lock()
+
+OCR_LANG_MAP = {
+    "auto": ["en"],
+    "eng_Latn": ["en"],
+    "fra_Latn": ["fr", "en"],
+    "spa_Latn": ["es", "en"],
+    "deu_Latn": ["de", "en"],
+    "swe_Latn": ["sv", "en"],
+    "fin_Latn": ["fi", "en"],
+    "nob_Latn": ["no", "en"],
+    "por_Latn": ["pt", "en"],
+    "ind_Latn": ["id", "en"],
+    "zsm_Latn": ["ms", "en"],
+    "swh_Latn": ["sw", "en"],
+    "vie_Latn": ["vi", "en"],
+    "tgl_Latn": ["tl", "en"],
+    "jpn_Jpan": ["ja", "en"],
+    "kor_Hang": ["ko", "en"],
+    "zho_Hans": ["ch_sim", "en"],
+    "yue_Hant": ["ch_tra", "en"],
+    "rus_Cyrl": ["ru", "en"],
+    "ukr_Cyrl": ["uk", "en"],
+    "arb_Arab": ["ar", "en"],
+    "hin_Deva": ["hi", "en"],
+}
+
+def get_ocr_reader(lang_key: str):
+    langs = tuple(OCR_LANG_MAP.get(lang_key, ["en"]))
+    if langs not in _ocr_readers:
+        with _ocr_lock:
+            if langs not in _ocr_readers:
+                use_gpu = torch.cuda.is_available()
+                print(f"[EasyOCR] Loading reader for {list(langs)} (gpu={use_gpu})...")
+                _ocr_readers[langs] = easyocr.Reader(list(langs), gpu=use_gpu, verbose=False)
+                print("[EasyOCR] Ready.")
+    return _ocr_readers[langs]
+
+@app.post("/api/ocr")
+async def api_ocr(image: UploadFile = File(...), ocr_lang: str = Form("auto")):
+    raw = await image.read()
+    try:
+        pil_img = Image.open(io.BytesIO(raw)).convert("RGB")
+        img_np = np.array(pil_img)
+        reader = get_ocr_reader(ocr_lang)
+        results = reader.readtext(img_np, detail=1)
+        lines = [r[1].strip() for r in results if r[1].strip()]
+        text = " ".join(lines).strip()
+        confs = [float(r[2]) for r in results if len(r) >= 3]
+        avg_conf = round((sum(confs) / len(confs)) * 100, 1) if confs else 0.0
+        return {
+            "text": text,
+            "ocr_confidence": avg_conf,
+            "lid": lid_model.predict(text) if text else None,
+        }
+    except Exception as e:
+        return JSONResponse({"error": f"OCR failed: {str(e)}"}, status_code=500)
+
 @app.post("/api/tts")
 async def api_tts(req: TtsRequest):
     global mms_tts_yor
@@ -1446,6 +1511,7 @@ EMBEDDED_HTML = r"""<!DOCTYPE html>
           </select>
           <button class="btn btn-secondary btn-icon" id="mic-btn" onclick="toggleMic()" aria-label="Record speech input">🎙️ <span data-i18n="btn_speak">Speak</span></button>
           <label class="btn btn-secondary btn-icon" title="Upload Audio Clip (Whisper)" style="margin:0;">📁 <input type="file" id="audio-upload" accept="audio/*" aria-label="Upload audio file" style="display:none;" onchange="uploadAudio(this)" /></label>
+          <label class="btn btn-secondary btn-icon" title="Extract Text from Image (OCR)" style="margin:0;">📷 <span style="font-size:0.85em;">OCR</span> <input type="file" id="ocr-upload-translate" accept="image/*" aria-label="Upload image for OCR translation" style="display:none;" onchange="runOcr(this, 'translate')" /></label>
           <button class="btn btn-primary" onclick="runTranslate()">⚡ <span data-i18n="btn_translate">Translate</span></button>
         </div>
       </div>
@@ -1529,7 +1595,19 @@ EMBEDDED_HTML = r"""<!DOCTYPE html>
     <div class="card">
       <h3>🔍 4.4.1 Language Identification (Tatoeba TF-IDF vs. langdetect)</h3>
       <div class="row" style="margin-bottom:10px;">
-        <input type="text" id="lid-input" aria-label="Sentence to identify" placeholder="Enter a short or ambiguous sentence (e.g. 'Saya mahu makan ubat' vs 'Saya mau makan obat')..." style="flex:1;" />
+        <input type="text" id="lid-input" aria-label="Sentence to identify" placeholder="Enter a short or ambiguous sentence (or upload an image with OCR)..." style="flex:1;" />
+        <select id="lid-ocr-script" aria-label="OCR script hint" title="OCR script hint for images" style="width:auto;padding:10px;">
+          <option value="auto">📷 Latin / English</option>
+          <option value="jpn_Jpan">📷 日本語 (Japanese)</option>
+          <option value="kor_Hang">📷 한국어 (Korean)</option>
+          <option value="zho_Hans">📷 中文 (Simplified)</option>
+          <option value="yue_Hant">📷 廣東話 (Traditional)</option>
+          <option value="rus_Cyrl">📷 Русский</option>
+          <option value="ukr_Cyrl">📷 Українська</option>
+          <option value="arb_Arab">📷 العربية</option>
+          <option value="hin_Deva">📷 हिन्दी</option>
+        </select>
+        <label class="btn btn-secondary btn-icon" title="Extract Text from Image (OCR)" style="margin:0;">📷 OCR <input type="file" id="ocr-upload-lid" accept="image/*" aria-label="Upload image for Language ID OCR" style="display:none;" onchange="runOcr(this, 'lid')" /></label>
         <button class="btn btn-primary" onclick="runLidPredict()">Identify</button>
       </div>
       <div id="lid-result" aria-live="polite"></div>
@@ -2063,6 +2141,44 @@ async function playSentences() {
     catch (e) { alert("Speech synthesis error: " + e.message); break; }
     chip.classList.remove("speaking");
   }
+}
+
+async function runOcr(input, mode) {
+  const file = input.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append("image", file, file.name);
+  const ocrLang = mode === "lid"
+    ? (document.getElementById("lid-ocr-script")?.value || "auto")
+    : (document.getElementById("src-lang")?.value || "auto");
+  fd.append("ocr_lang", ocrLang);
+
+  if (mode === "translate") {
+    document.getElementById("src-text").value = "Extracting text from image with EasyOCR...";
+  } else {
+    document.getElementById("lid-input").value = "Extracting text from image with EasyOCR...";
+  }
+
+  try {
+    const r = await fetch("/api/ocr", { method: "POST", body: fd });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    if (mode === "translate") {
+      document.getElementById("src-text").value = d.text || "";
+      if (d.text) runTranslate();
+    } else {
+      document.getElementById("lid-input").value = d.text || "";
+      if (d.text) {
+        await runLidPredict();
+        document.getElementById("lid-result").innerHTML += `<div class="alert">📷 <strong>OCR Confidence:</strong> ${d.ocr_confidence}%</div>`;
+      }
+    }
+  } catch (e) {
+    const msg = "OCR error: " + e.message;
+    if (mode === "translate") document.getElementById("src-text").value = msg;
+    else document.getElementById("lid-input").value = msg;
+  }
+  input.value = "";
 }
 
 async function uploadAudio(input) {

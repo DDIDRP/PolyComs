@@ -15,6 +15,7 @@ PolyComs is an accessible, machine-learning-powered translation web app built in
   * **Translation:** `facebook/nllb-200-distilled-600M` (loaded in `float16` on a T4 GPU) with beam search for confidence and alternative phrasing.
   * **Speech:** `openai/whisper-small` for multilingual Speech-to-Text (evaluated with `jiwer` WER), `facebook/mms-tts-yor` for Yoruba TTS, and `edge-tts` / `gTTS` for the remaining 23 languages.
   * **Backend/UI:** FastAPI, Uvicorn, Cloudflare Tunnel (`cloudflared`), `sacrebleu` (`chrF`), plus custom Easy-Read, key-info extraction, and Safe Language Mode layers.
+  * ** OCR from EasyOCR to detect languages from images, and pictures. This is now both in the "Translate & Explain" and "Language ID" sections, for ease of use.
 
 ## Results
 * **Language Identification (4.4.1):** On held-out Tatoeba test data, PolyComs achieved **95.7% overall accuracy**, reaching **100%** on Swahili (`swh`, 500 test samples) and outperforming `langdetect` on less-served languages like Yoruba (`yor`, where `langdetect` fails because Yoruba is unsupported). Its lowest score was Indonesian (`ind`) at **78.2%**, largely due to lexical overlap with look-alike Malay (`zsm`).
