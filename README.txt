@@ -22,6 +22,7 @@ PolyComs is an accessible, machine-learning-powered translation web app built in
 * ** Language ID in Japanese appears to believe English, likely due to not understanding Romaji writing of the language. For example, "arigato", and "arigatogozaimasu" (thank you, and thank you very much), are detected as Cantonese, with 13% confidence, which is obviously incorrect. This may expand to other Language ID issues with typing in scripts other than their native writing methods and scripts.
 * ** Without full training upon loads, ID accuracy drops significantly, to ~74%.
 * **Takeaway:** While `chrF` penalizes valid differences in grammar or politeness (especially in Japanese/Korean), low scores on high-stakes medical text show why confidence meters and human-verification warnings are essential.
+* ** PLEASE NOTE - WHILST THIS TOOL MAY ATTEMPT TO TRANSLATE MEDICAL OR IMPORTANT INSTRUCTIONS, THIS IS A PROTOTYPE, AND SHOULD NOT BE RELIED ON FOR IMPORTANT INFORMATION, SUCH AS MEDICATION DOSAGES, FINANCIAL INFORMATION, OR LEGAL INFORMATION!!!
 
 ## What I'd do next
 1. Investigate why Yoruba (`yor_Latn`) scored `10.52` `chrF` despite using the Latin script—likely due to scarce training data and tone-mark sensitivity—and evaluate larger or domain-adapted models for Yoruba, Cyrillic, Japanese, Korean, and Mandarin.
